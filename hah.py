@@ -30,14 +30,6 @@ water_data.head()
 
 df=water_data.copy()
 
-"""2. Lakukan analisis awal terhadap 10 kolom dari dataset, yang terdiri dari: Ph, Hardness, Solids,
-Chloramines, Sulfate, Conductivity, Organic_carbon, Trihalomethanes, Turbidity, dan
-Potabiliy. Tampilkan informasi dari dataset, seperti jumlah baris, tipe data tiap kolom, dan
-nilai unik.
-"""
-
-water_data.info()
-
 print ("Jumlah baris : ",water_data.shape[0])
 
 water_data.dtypes
@@ -259,67 +251,6 @@ dump(dt, 'dt_model.joblib')
 # Menyimpan model KNN
 dump(knn, 'knn_model.joblib')
 
-import streamlit as st
-import pandas as pd
-from joblib import load
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-
-# Memuat model yang telah disimpan
-gnb_model = load('gnb_model.joblib')
-dt_model = load('dt_model.joblib')
-knn_model = load('knn_model.joblib')
-
-# Fungsi untuk memproses input dan prediksi
-def predict(model, input_data):
-    # Menggunakan StandardScaler untuk normalisasi input
-    scaler = StandardScaler()
-    input_scaled = scaler.fit_transform(np.array(input_data).reshape(1, -1))
-
-    prediction = model.predict(input_scaled)
-    return prediction[0]
-
-# Layout Streamlit
-st.title("Aplikasi Prediksi Kualitas Air")
-
-st.write("""
-    Aplikasi ini memungkinkan pengguna untuk memprediksi **Potability** air
-    menggunakan model klasifikasi. Pilih model dan masukkan fitur untuk melakukan prediksi.
-""")
-
-# Pilihan model
-model_choice = st.selectbox('Pilih Model', ['Gaussian Naive Bayes', 'Decision Tree', 'K-Nearest Neighbors'])
-
-# Input untuk prediksi
-st.write("Masukkan fitur kualitas air:")
-hardness = st.number_input("Hardness", min_value=0.0, max_value=100.0, value=20.0)
-solids = st.number_input("Solids", min_value=0.0, max_value=10000.0, value=500.0)
-chloramines = st.number_input("Chloramines", min_value=0.0, max_value=10.0, value=1.0)
-sulfate = st.number_input("Sulfate", min_value=0.0, max_value=10.0, value=0.5)
-conductivity = st.number_input("Conductivity", min_value=0.0, max_value=100.0, value=10.0)
-organic_carbon = st.number_input("Organic Carbon", min_value=0.0, max_value=10.0, value=1.0)
-trihalomethanes = st.number_input("Trihalomethanes", min_value=0.0, max_value=10.0, value=0.3)
-turbidity = st.number_input("Turbidity", min_value=0.0, max_value=10.0, value=1.0)
-potability = st.number_input("Potability", min_value=0.0, max_value=100.0, value=20.0)
-
-# Membuat input_data dalam bentuk list
-input_data = [hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity, potability]
-
-# Button untuk prediksi
-if st.button('Prediksi Potability'):
-    # Pilih model berdasarkan pilihan pengguna
-    if model_choice == 'Gaussian Naive Bayes':
-        prediction = predict(gnb_model, input_data)
-    elif model_choice == 'Decision Tree':
-        prediction = predict(dt_model, input_data)
-    else:
-        prediction = predict(knn_model, input_data)
-
-    # Menampilkan hasil prediksi
-    if prediction == 1:
-        st.success('Air tersebut bisa diminum (Potable)')
-    else:
-        st.error('Air tersebut tidak bisa diminum (Not Potable)')
 
 import streamlit as st
 import pandas as pd
