@@ -30,6 +30,8 @@ water_data.head()
 
 df=water_data.copy()
 
+water_data.info()
+
 print ("Jumlah baris : ",water_data.shape[0])
 
 water_data.dtypes
@@ -241,16 +243,6 @@ knn_scaled_acc = accuracy_score(y_test, knn.predict(X_test_scaled))
 print(f"Akurasi GaussianNB setelah di normalisasi: {gnb_scaled_acc:.4f}")
 print(f"Akurasi Decision Tree setelah di normalisasi: {dt_scaled_acc:.4f}")
 print(f"Akurasi KNN setelah di normalisasi: {knn_scaled_acc:.4f}")
-
-from joblib import dump
-
-# Menyimpan model GaussianNB
-dump(gnb, 'gnb_model.joblib')
-# Menyimpan model DecisionTree
-dump(dt, 'dt_model.joblib')
-# Menyimpan model KNN
-dump(knn, 'knn_model.joblib')
-
 
 import streamlit as st
 import pandas as pd
