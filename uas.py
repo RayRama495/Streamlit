@@ -288,23 +288,23 @@ uploaded_file = st.file_uploader("Pilih file CSV", type=["csv"])
 
 if uploaded_file is not None:
     # Membaca data dari file CSV yang diupload
-    data = pd.read_csv(uploaded_file)
+    df = pd.read_csv(uploaded_file)
     st.write("Dataset Kualitas Air:")
-    st.write(data.head())
+    st.write(df.head())
     
     # Menggunakan SimpleImputer untuk mengganti NaN dengan rata-rata (mean)
     imputer = SimpleImputer(strategy='mean')
-    data_imputed = imputer.fit_transform(data)
-    data = pd.DataFrame(data_imputed, columns=data.columns)
+    data_imputed = imputer.fit_transform(df)
+    df = pd.DataFrame(data_imputed, columns=df.columns)
     
     st.write("Data setelah imputasi NaN-nya:")
-    st.write(data.head())
+    st.write(df.head())
     
     # Pastikan dataset memiliki kolom yang diinginkan
-    if "Potability" in data.columns:
+    if "Potability" in df.columns:
         # Menyiapkan data untuk pelatihan
-        X = data.drop(columns=["Potability"])
-        y = data["Potability"]
+        X = df.drop(columns=["Potability"])
+        y = df["Potability"]
         
         # Membagi data menjadi training dan testing set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -351,7 +351,7 @@ if uploaded_file is not None:
         # Menampilkan visualisasi distribusi potabilitas
         st.write("Distribusi Potability dalam Dataset:")
         fig, ax = plt.subplots()
-        data['Potability'].value_counts().plot(kind='bar', ax=ax)
+        df['Potability'].value_counts().plot(kind='bar', ax=ax)
         ax.set_xlabel("Potability")
         ax.set_ylabel("Count")
         st.pyplot(fig)
