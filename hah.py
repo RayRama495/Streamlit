@@ -321,8 +321,6 @@ if st.button('Prediksi Potability'):
     else:
         st.error('Air tersebut tidak bisa diminum (Not Potable)')
 
-water_data=df.copy()
-
 import streamlit as st
 import pandas as pd
 import numpy as np
