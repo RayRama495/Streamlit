@@ -247,118 +247,93 @@ print(f"Akurasi KNN setelah di normalisasi: {knn_scaled_acc:.4f}")
 import streamlit as st
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, confusion_matrix
-from imblearn.over_sampling import SMOTE
+from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
-# Judul aplikasi
-st.title("Water Potability Prediction App")
+# Fungsi untuk memuat dan menyiapkan data
+@st.cache
+def load_data():
+    # Gantilah dengan path ke file dataset kualitas air Anda
+    data = pd.read_csv('water_quality.csv')  # Pastikan dataset ada di folder yang sama atau beri path yang benar
+    return data
 
-# File uploader untuk mengunggah dataset CSV
-uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+# Fungsi untuk menyiapkan model dan pelatihan
+def prepare_model(model_type, X_train, y_train):
+    if model_type == 'GaussianNB':
+        model = GaussianNB()
+    elif model_type == 'Decision Tree':
+        model = DecisionTreeClassifier(random_state=42)
+    elif model_type == 'KNN':
+        model = KNeighborsClassifier()
+    
+    model.fit(X_train, y_train)
+    return model
 
-if uploaded_file is not None:
-    # Membaca dataset
-    df = pd.read_csv(uploaded_file)
+# Fungsi untuk menampilkan evaluasi model
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    return accuracy
 
-    # Menampilkan dataset
-    st.subheader("Dataset")
-    st.write(df.head())
+# Menginisialisasi aplikasi Streamlit
+st.title("Water Quality Potability Prediction")
 
-    # Menampilkan informasi umum tentang dataset
-    st.subheader("Dataset Info")
-    st.write(df.info())
+# Memuat dan menampilkan data
+data = load_data()
+st.write("Dataset Kualitas Air:")
+st.write(data.head())
 
-    # Memeriksa missing values
-    st.subheader("Missing Values")
-    st.write(df.isnull().sum())
+# Menyiapkan data
+X = data.drop(columns=["Potability"])
+y = data["Potability"]
 
-    # Memisahkan fitur dan target
-    X = df.drop(columns=["Potability"])
-    y = df["Potability"]
+# Membagi data menjadi training dan testing set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Menangani missing values menggunakan imputasi rata-rata
-    X = X.fillna(X.mean())
+# Normalisasi data
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
-    # Normalisasi Data
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+# Memilih model
+model_choice = st.sidebar.selectbox("Pilih Model", ['GaussianNB', 'Decision Tree', 'KNN'])
 
-    # Membagi data menjadi train dan test
-    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+# Pelatihan model
+st.write(f"Training Model {model_choice}...")
+model = prepare_model(model_choice, X_train_scaled, y_train)
 
-    # Resampling menggunakan SMOTE untuk menangani class imbalance
-    smote = SMOTE(random_state=42)
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
+# Evaluasi model
+accuracy = evaluate_model(model, X_test_scaled, y_test)
+st.write(f"Akurasi Model {model_choice}: {accuracy:.4f}")
 
-    # Model Klasifikasi
-    models = {
-        "Decision Tree": DecisionTreeClassifier(random_state=42),
-        "Random Forest": RandomForestClassifier(random_state=42),
-        "K-Nearest Neighbors": KNeighborsClassifier()
-    }
+# Fitur input untuk prediksi
+st.sidebar.header("Masukkan Fitur Baru")
+hardness = st.sidebar.slider("Hardness", float(X["Hardness"].min()), float(X["Hardness"].max()), float(X["Hardness"].mean()))
+solids = st.sidebar.slider("Solids", float(X["Solids"].min()), float(X["Solids"].max()), float(X["Solids"].mean()))
+chloramines = st.sidebar.slider("Chloramines", float(X["Chloramines"].min()), float(X["Chloramines"].max()), float(X["Chloramines"].mean()))
+sulfate = st.sidebar.slider("Sulfate", float(X["Sulfate"].min()), float(X["Sulfate"].max()), float(X["Sulfate"].mean()))
+conductivity = st.sidebar.slider("Conductivity", float(X["Conductivity"].min()), float(X["Conductivity"].max()), float(X["Conductivity"].mean()))
+organic_carbon = st.sidebar.slider("Organic_carbon", float(X["Organic_carbon"].min()), float(X["Organic_carbon"].max()), float(X["Organic_carbon"].mean()))
+trihalomethanes = st.sidebar.slider("Trihalomethanes", float(X["Trihalomethanes"].min()), float(X["Trihalomethanes"].max()), float(X["Trihalomethanes"].mean()))
+turbidity = st.sidebar.slider("Turbidity", float(X["Turbidity"].min()), float(X["Turbidity"].max()), float(X["Turbidity"].mean()))
 
-    # Menyimpan akurasi untuk setiap model
-    model_accuracies = {}
+input_data = np.array([[hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity]])
+input_data_scaled = scaler.transform(input_data)
 
-    # Melatih dan menguji model
-    for model_name, model in models.items():
-        # Melatih model
-        model.fit(X_train_resampled, y_train_resampled)
+# Prediksi menggunakan model yang dipilih
+prediction = model.predict(input_data_scaled)
+predicted_class = "Potable" if prediction[0] == 1 else "Non-Potable"
+st.sidebar.write(f"Prediksi Potabilitas: {predicted_class}")
 
-        # Prediksi
-        y_pred = model.predict(X_test)
-
-        # Menghitung akurasi
-        accuracy = accuracy_score(y_test, y_pred)
-        model_accuracies[model_name] = accuracy
-
-        # Menampilkan confusion matrix
-        st.subheader(f"Confusion Matrix - {model_name}")
-        cm = confusion_matrix(y_test, y_pred)
-        st.write(cm)
-
-    # Menampilkan hasil perbandingan akurasi
-    st.subheader("Model Accuracy Comparison")
-    st.write(model_accuracies)
-
-    # Visualisasi distribusi potability
-    st.subheader("Potability Distribution")
-    sns.countplot(x='Potability', data=df)
-    plt.title('Distribution of Potability')
-    st.pyplot()
-
-    # Menampilkan histogram fitur numerik
-    st.subheader("Histogram of Features")
-    numerical_columns = X.columns
-    for col in numerical_columns:
-        plt.figure(figsize=(6, 4))
-        sns.histplot(df[col], kde=True, bins=20)
-        plt.title(f'Distribution of {col}')
-        st.pyplot()
-
-    # Fitur prediksi
-    st.subheader("Make Prediction")
-    st.write("Choose the features for prediction:")
-    input_values = {}
-    for col in numerical_columns:
-        input_values[col] = st.slider(f"Select {col}", min_value=float(df[col].min()), max_value=float(df[col].max()), value=float(df[col].mean()))
-
-    input_data = np.array(list(input_values.values())).reshape(1, -1)
-    input_data_scaled = scaler.transform(input_data)
-
-    # Prediksi menggunakan model terbaik (misalnya RandomForest)
-    best_model = RandomForestClassifier(random_state=42)
-    best_model.fit(X_train_resampled, y_train_resampled)
-    prediction = best_model.predict(input_data_scaled)
-
-    if prediction == 1:
-        st.write("The water is Potable")
-    else:
-        st.write("The water is Not Potable")
+# Menampilkan visualisasi (misalnya, distribusi target Potability)
+st.write("Distribusi Potability dalam Dataset:")
+fig, ax = plt.subplots()
+data['Potability'].value_counts().plot(kind='bar', ax=ax)
+ax.set_xlabel("Potability")
+ax.set_ylabel("Count")
+st.pyplot(fig)
