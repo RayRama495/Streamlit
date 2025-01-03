@@ -259,6 +259,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
 
 # Fungsi untuk menyiapkan model dan pelatihan
@@ -289,6 +290,14 @@ if uploaded_file is not None:
     # Membaca data dari file CSV yang diupload
     data = pd.read_csv(uploaded_file)
     st.write("Dataset Kualitas Air:")
+    st.write(data.head())
+    
+    # Menggunakan SimpleImputer untuk mengganti NaN dengan rata-rata (mean)
+    imputer = SimpleImputer(strategy='mean')
+    data_imputed = imputer.fit_transform(data)
+    data = pd.DataFrame(data_imputed, columns=data.columns)
+    
+    st.write("Data setelah imputasi NaN-nya:")
     st.write(data.head())
     
     # Pastikan dataset memiliki kolom yang diinginkan
@@ -328,7 +337,11 @@ if uploaded_file is not None:
         turbidity = st.sidebar.slider("Turbidity", float(X["Turbidity"].min()), float(X["Turbidity"].max()), float(X["Turbidity"].mean()))
 
         input_data = np.array([[hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity]])
-        input_data_scaled = scaler.transform(input_data)
+
+        # Imputasi untuk input data baru
+        input_data_imputed = imputer.transform(input_data)
+
+        input_data_scaled = scaler.transform(input_data_imputed)
 
         # Prediksi menggunakan model yang dipilih
         prediction = model.predict(input_data_scaled)
