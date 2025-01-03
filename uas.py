@@ -335,8 +335,9 @@ if uploaded_file is not None:
         organic_carbon = st.sidebar.slider("Organic_carbon", float(X["Organic_carbon"].min()), float(X["Organic_carbon"].max()), float(X["Organic_carbon"].mean()))
         trihalomethanes = st.sidebar.slider("Trihalomethanes", float(X["Trihalomethanes"].min()), float(X["Trihalomethanes"].max()), float(X["Trihalomethanes"].mean()))
         turbidity = st.sidebar.slider("Turbidity", float(X["Turbidity"].min()), float(X["Turbidity"].max()), float(X["Turbidity"].mean()))
+        potability = st.sidebar.slider("Potability", float(X["Potability"].min()), float(X["Potability"].max()), float(X["Potability"].mean()))
 
-        input_data = np.array([[hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity]])
+        input_data = np.array([[hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity, potability]])
 
         # Imputasi untuk input data baru
         input_data_imputed = imputer.transform(input_data)
